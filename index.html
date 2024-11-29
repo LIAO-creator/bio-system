@@ -73,6 +73,8 @@
     <!-- 游戏画布容器 -->
     <div id="gameContainer" style="display: none;">
         <canvas id="gameCanvas"></canvas>
+        <div class="score"></div>
+        <div class="target-text"></div>
     </div>
 
     <!-- 游戏相关的脚本 -->
@@ -124,6 +126,8 @@
 
         let images = {};
         let components = [];
+        let currentTarget = getNewTargetText(); // 初始化目标配对序列
+        let targetComponents = NUCLEOTIDES[currentTarget]; // 当前目标序列
 
         const NUCLEOTIDES = {
             'A-T': [['A', 'T']],
@@ -201,22 +205,27 @@
                 return;
             }
 
+            // 清除画布背景
             ctx.fillStyle = BACKGROUND_COLOR;
             ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
+            // 绘制拼装区域
             ctx.strokeStyle = GREEN;
             ctx.lineWidth = 2;
             ctx.strokeRect(WIDTH / 2 - 200, HEIGHT / 2 + 50, 400, 200);
 
+            // 显示剩余时间
             ctx.fillStyle = BLACK;
             ctx.font = font;
             ctx.fillText(`时间: ${timeLeft}秒`, 10, 40);
 
+            // 显示分数
             ctx.fillText(`分数: ${score}`, WIDTH - 150, 40);
 
-            const targetText = getNewTargetText();
-            ctx.fillText(`目标: ${targetText}`, WIDTH / 2 - ctx.measureText(targetText).width / 2, 50);
+            // 显示目标核苷酸
+            ctx.fillText(`目标: ${currentTarget}`, WIDTH / 2 - ctx.measureText(currentTarget).width / 2, 50);
 
+            // 绘制组件
             components.forEach((component) => component.draw());
 
             requestAnimationFrame(gameLoop);
@@ -228,52 +237,14 @@
             return randomTarget;
         }
 
-        function checkAssembly(component, targetComponents) {
-            for (let target of targetComponents) {
-                if (component.name === target[0]) {
-                    return true;
-                }
+        function checkAssembly(component) {
+            const isCorrect = targetComponents.some(target => target[0] === component.name);
+            if (isCorrect) {
+                score += 10;  // 增加分数
+                targetComponents = NUCLEOTIDES[getNewTargetText()];  // 切换到新的配对序列
+                currentTarget = getNewTargetText(); // 更新目标序列
             }
-            return false;
         }
 
         function endGame(message) {
-            ctx.fillStyle = WHITE;
-            ctx.fillRect(0, 0, WIDTH, HEIGHT);
-            ctx.fillStyle = BLACK;
-            ctx.font = '50px Arial';
-            ctx.fillText(message, WIDTH / 2 - ctx.measureText(message).width / 2, HEIGHT / 2);
-        }
-
-        let isMouseDown = false;
-        let draggedComponent = null;
-
-        canvas.addEventListener('mousedown', (event) => {
-            isMouseDown = true;
-            const mouseX = event.offsetX;
-            const mouseY = event.offsetY;
-
-            components.forEach((component) => {
-                if (component.contains(mouseX, mouseY)) {
-                    draggedComponent = component;
-                    component.startDrag();
-                }
-            });
-        });
-
-        canvas.addEventListener('mousemove', (event) => {
-            if (draggedComponent && isMouseDown) {
-                draggedComponent.updatePosition(event.offsetX, event.offsetY);
-            }
-        });
-
-        canvas.addEventListener('mouseup', () => {
-            if (draggedComponent) {
-                draggedComponent.stopDrag();
-                draggedComponent = null;
-            }
-            isMouseDown = false;
-        });
-    </script>
-</body>
-</html>
+            ctx.fillStyle
