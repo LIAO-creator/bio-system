@@ -78,8 +78,6 @@
     </div>
 
     <!-- 游戏相关的脚本 -->
-    <script src="game.js"></script>
-
     <script>
         // 定义是否显示游戏的变量
         function startGame() {
@@ -231,20 +229,4 @@
             requestAnimationFrame(gameLoop);
         }
 
-        function getNewTargetText() {
-            const allTargets = Object.keys(NUCLEOTIDES);
-            const randomTarget = allTargets[Math.floor(Math.random() * allTargets.length)];
-            return randomTarget;
-        }
-
-        function checkAssembly(component) {
-            const isCorrect = targetComponents.some(target => target[0] === component.name);
-            if (isCorrect) {
-                score += 10;  // 增加分数
-                targetComponents = NUCLEOTIDES[getNewTargetText()];  // 切换到新的配对序列
-                currentTarget = getNewTargetText(); // 更新目标序列
-            }
-        }
-
-        function endGame(message) {
-            ctx.fillStyle
+     
