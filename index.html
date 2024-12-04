@@ -18,8 +18,10 @@
             cursor: pointer;
         }
     </style>
+    <!-- 引入 Brython 库 -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.10.5/brython.min.js"></script>
 </head>
-<body style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
+<body style="font-family: Arial, sans-serif; text-align: center; padding: 20px;" onload="brython()">
     <h1 style="color: #4CAF50;">点击这里了解DNA的秘密</h1>
     <p>DNA，作为生命的遗传密码，包含了生物体的重要信息。点击下方链接，探索更多关于DNA的精彩内容！</p>
     <a href="https://liao-creator.github.io/bio-system/dna-page.html" style="font-size: 20px; color: #007BFF; text-decoration: none;">继续探索</a>
@@ -27,6 +29,269 @@
     <br><br>
     
     <!-- 新增按钮 -->
-    <a href="你的游戏链接" class="button">核苷酸拼装游戏</a>
+    <a href="javascript:void(0)" class="button" id="game_button">核苷酸拼装游戏</a>
+    
+    <p id="message">点击按钮开始游戏</p>
+
+    <!-- Brython Python 代码 -->
+    <script type="text/python">
+        from browser import document, window
+
+        # 定义按钮点击事件处理函数
+        def game_button_click(event):
+            document["message"].text = "游戏加载中..."
+            # 这里可以放置游戏相关的代码，例如打开游戏链接或进行其他操作
+        import pygame
+import random
+import time
+
+# 初始化pygame
+pygame.init()
+
+# 游戏界面参数
+WIDTH, HEIGHT = 1000, 700
+FPS = 30
+font = pygame.font.Font("youaimoshouheiti-bold.ttf", 40)
+
+# 颜色
+BACKGROUND_COLOR = (230, 230, 255)
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+GREEN = (34, 177, 76)
+
+# 加载图像（假设你有这些图片文件在项目目录中）
+BASE_A = pygame.image.load("base_A.png")
+BASE_T = pygame.image.load("base_T.png")
+BASE_C = pygame.image.load("base_C.png")
+BASE_G = pygame.image.load("base_G.png")
+BASE_U = pygame.image.load("base_U.png")
+
+# 将图像调整为 100x100 像素
+def scale_image(img, size=(100, 100)):
+    return pygame.transform.scale(img, size)
+
+BASE_A = scale_image(BASE_A)
+BASE_T = scale_image(BASE_T)
+BASE_C = scale_image(BASE_C)
+BASE_G = scale_image(BASE_G)
+BASE_U = scale_image(BASE_U)
+
+# 核苷酸配对（目标核苷酸结构，包含碱基配对方式）
+NUCLEOTIDES = {
+    "A-T": [("A", BASE_A), ("T", BASE_T)],
+    "C-G": [("C", BASE_C), ("G", BASE_G)],
+    "A-U": [("A", BASE_A), ("U", BASE_U)],
+    "G-C": [("G", BASE_G), ("C", BASE_C)],
+}
+
+# 初始化游戏窗口
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("核苷酸拼装游戏")
+
+# 游戏状态
+clock = pygame.time.Clock()
+score = 0
+time_left = 60  # 游戏倒计时
+start_time = time.time()
+
+# 拼装区域位置调整
+ASSEMBLY_RECT = pygame.Rect(WIDTH // 2 - 200, HEIGHT // 2 + 50, 400, 200)
+
+# 组件类（用于拖动操作）
+class DraggableComponent(pygame.sprite.Sprite):
+    def __init__(self, image, x, y, name):
+        super().__init__()
+        self.image = image
+        self.rect = self.image.get_rect()
+        self.rect.topleft = (x, y)
+        self.name = name
+        self.dragging = False
+        self.movable = True  # 是否可移动
+
+    def update(self):
+        if self.dragging and self.movable:
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+            self.rect.topleft = (mouse_x - self.rect.width // 2, mouse_y - self.rect.height // 2)
+
+    def start_drag(self):
+        if self.movable:
+            self.dragging = True
+
+    def stop_drag(self):
+        self.dragging = False
+
+    def lock_position(self):
+        self.movable = False  # 锁定位置
+
+# 初始化可拖动组件
+components = pygame.sprite.Group()
+
+# 初始化组件（碱基）
+def init_components():
+    x, y = (WIDTH - 5 * 120) // 2, 150  # 将组件居中显示
+    components.add(DraggableComponent(BASE_A, x, y, "A"))
+    components.add(DraggableComponent(BASE_T, x + 120, y, "T"))
+    components.add(DraggableComponent(BASE_C, x + 240, y, "C"))
+    components.add(DraggableComponent(BASE_G, x + 360, y, "G"))
+    components.add(DraggableComponent(BASE_U, x + 480, y, "U"))
+
+# 游戏循环
+def game_loop():
+    global score, time_left, start_time
+    init_components()
+    recent_targets = []  # 记录最近五次的目标核苷酸
+    target_nucleotide = get_new_target(recent_targets)
+    target_components = NUCLEOTIDES[target_nucleotide]
+    assembled_components = []
+    last_assembled_time = pygame.time.get_ticks()  # 上次拼装成功的时间
+    show_success_message = False  # 是否显示拼装成功的信息
+    success_message_time = 0  # 拼装成功消息显示的时间
+    show_error_message = False  # 是否显示拼装错误的信息
+    error_message_time = 0  # 拼装错误消息显示的时间
+
+    while True:
+        # 计算剩余时间
+        time_left = 60 - int(time.time() - start_time)
+        if time_left <= 0:
+            end_game()
+            break
+
+        # 检查退出事件
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                return
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                # 开始拖动
+                for component in components:
+                    if component.rect.collidepoint(event.pos):
+                        component.start_drag()
+
+            if event.type == pygame.MOUSEBUTTONUP:
+                # 停止拖动
+                for component in components:
+                    if component.dragging:
+                        component.stop_drag()
+                        # 如果组件进入拼装区域，判断是否正确
+                        if ASSEMBLY_RECT.colliderect(component.rect):
+                            if check_assembly(component, target_components):
+                                component.lock_position()  # 锁定组件位置
+                                assembled_components.append(component)
+                                # 如果两个碱基都正确配对，则加分
+                                if len(assembled_components) == 2:
+                                    score += 1
+                                    assembled_components.clear()
+                                    recent_targets.append(target_nucleotide)  # 记录成功拼装的目标
+                                    if len(recent_targets) > 5:
+                                        recent_targets.pop(0)
+                                    target_nucleotide = get_new_target(recent_targets)
+                                    target_components = NUCLEOTIDES[target_nucleotide]
+                                    last_assembled_time = pygame.time.get_ticks()
+                                    show_success_message = True
+                                    success_message_time = pygame.time.get_ticks()
+                            else:
+                                # 拼装错误，减分并显示错误提示
+                                score -= 1
+                                if score < 0:
+                                    end_game("你失败了")
+                                    return
+                                show_error_message = True
+                                error_message_time = pygame.time.get_ticks()
+                                reset_components()  # 重置组件位置
+
+        # 更新组件位置
+        components.update()
+
+        # 绘制游戏界面
+        screen.fill(BACKGROUND_COLOR)
+
+        # 绘制拼装区域
+        pygame.draw.rect(screen, GREEN, ASSEMBLY_RECT, 2)
+
+        # 在拼装区域下方显示文字“拼装区域”
+        assembly_text = font.render("拼装区域", True, BLACK)
+        screen.blit(assembly_text, (WIDTH // 2 - assembly_text.get_width() // 2, HEIGHT // 2 + 270))
+
+        # 显示剩余时间
+        time_text = font.render(f"时间: {time_left}秒", True, BLACK)
+        screen.blit(time_text, (10, 10))
+
+        # 显示分数
+        score_text = font.render(f"分数: {score}", True, BLACK)
+        screen.blit(score_text, (WIDTH - 150, 10))
+
+        # 显示目标核苷酸
+        target_text = font.render(f"目标: {target_nucleotide}", True, BLACK)
+        screen.blit(target_text, (WIDTH // 2 - target_text.get_width() // 2, 50))
+
+        # 如果拼装成功，显示成功消息
+        if show_success_message:
+            success_text = font.render("拼装成功！", True, BLACK)
+            screen.blit(success_text, (WIDTH // 2 - success_text.get_width() // 2, HEIGHT // 2 + 120))
+            # 如果显示时间超过 1 秒，停止显示
+            if pygame.time.get_ticks() - success_message_time > 1000:
+                show_success_message = False
+                reset_components()  # 重置核苷酸组件位置
+                # 等待 3 秒后恢复正常
+                if pygame.time.get_ticks() - last_assembled_time > 3000:
+                    last_assembled_time = pygame.time.get_ticks()
+                    continue
+
+        # 如果拼装错误，显示错误消息
+        if show_error_message:
+            error_text = font.render("拼装错误！", True, BLACK)
+            screen.blit(error_text, (WIDTH // 2 - error_text.get_width() // 2, HEIGHT // 2 + 120))
+            # 如果显示时间超过 1 秒，停止显示
+            if pygame.time.get_ticks() - error_message_time > 1000:
+                show_error_message = False
+                reset_components()  # 重置核苷酸组件位置
+                # 等待 3 秒后恢复正常
+                if pygame.time.get_ticks() - error_message_time > 3000:
+                    continue
+
+        # 绘制所有组件
+        components.draw(screen)
+
+        # 更新屏幕
+        pygame.display.flip()
+        clock.tick(FPS)
+
+# 获取新的目标核苷酸，确保不重复
+def get_new_target(recent_targets):
+    all_targets = list(NUCLEOTIDES.keys())
+    random.shuffle(all_targets)
+    for target in all_targets:
+        if target not in recent_targets:
+            return target
+    return all_targets[0]  # 默认返回第一个目标
+
+# 判断拼装是否正确
+def check_assembly(component, target_components):
+    for target_name, target_image in target_components:
+        if component.name == target_name:
+            return True
+    return False
+
+# 重置所有核苷酸组件的位置
+def reset_components():
+    components.empty()
+    init_components()
+
+# 游戏结束处理
+def end_game(message="游戏结束!"):
+    screen.fill(WHITE)
+    end_text = font.render(f"{message} ", True, BLACK)
+    screen.blit(end_text, (WIDTH // 2 - end_text.get_width() // 2, HEIGHT // 2))
+    pygame.display.flip()
+    pygame.time.wait(3000)  # 等待 3 秒后关闭游戏
+    pygame.quit()
+
+# 运行游戏
+game_loop()
+
+
+        # 绑定按钮点击事件
+        document["game_button"].bind("click", game_button_click)
+    </script>
 </body>
 </html>
