@@ -59,12 +59,15 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 GREEN = (34, 177, 76)
 
-# 加载图像（假设你有这些图片文件在项目目录中）
-BASE_A = pygame.image.load("base_A.png")
-BASE_T = pygame.image.load("base_T.png")
-BASE_C = pygame.image.load("base_C.png")
-BASE_G = pygame.image.load("base_G.png")
-BASE_U = pygame.image.load("base_U.png")
+
+# 加载图片（假设你已准备好相应的图片）
+const baseImages = {
+    BASE_A: 'base_A.png',
+    BASE_T: 'base_T.png',
+    BASE_C: 'base_C.png',
+    BASE_G: 'base_G.png',
+    BASE_U: 'base_U.png'
+};
 
 # 将图像调整为 100x100 像素
 def scale_image(img, size=(100, 100)):
