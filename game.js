@@ -12,7 +12,7 @@
 <body>
 <canvas id="gameCanvas"></canvas>
 <script>
-    function star_game(){
+    function start_game(){
         console.log("游戏开始！"）;
         
     const canvas = document.getElementById("gameCanvas");
