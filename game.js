@@ -12,9 +12,6 @@
 <body>
 <canvas id="gameCanvas"></canvas>
 <script>
-    function start_game(){
-        console.log("游戏开始！"）;
-        
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
@@ -58,7 +55,7 @@
     const assemblyText = "拼装区域";
     let targetNucleotide = getNewTarget([]);
     let targetComponents = NUCLEOTIDES[targetNucleotide];
-    let assembledComponents = [];
+    let assembledComponents = []; // 存储已正确拼装的核苷酸
     let showSuccessMessage = false;
     let successMessageTime = 0;
     let showErrorMessage = false;
@@ -231,7 +228,7 @@
         const mouseY = e.offsetY;
 
         components.forEach(component => {
-            if (component.isInside(mouseX, mouseY)) {
+            if (component.isInside(mouseX, mouseY) && component.movable) {
                 draggingComponent = component;
                 component.startDrag();
             }
