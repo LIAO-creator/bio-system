@@ -20,8 +20,6 @@
     </style>
     <!-- 引入 Brython 库 -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.10.5/brython.min.js"></script>
-    <!-- 引入游戏的 JavaScript 文件 -->
-    <script type="text/javascript" src="game.js"></script>
 </head>
 <body style="font-family: Arial, sans-serif; text-align: center; padding: 20px;" onload="brython()">
     <h1 style="color: #4CAF50;">点击这里了解DNA的秘密</h1>
@@ -42,8 +40,8 @@
         # 定义按钮点击事件处理函数
         def game_button_click(event):
             document["message"].text = "游戏加载中..."
-            # 这里调用 JavaScript 中的游戏启动函数
-            start_game()
+            # 这里调用 JavaScript 中的跳转代码
+            window.location.href = "game.html"
 
         # 绑定按钮点击事件
         document["game_button"].bind("click", game_button_click)
