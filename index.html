@@ -33,18 +33,14 @@
     
     <p id="message">点击按钮开始游戏</p>
 
-    <!-- Brython Python 代码 -->
-    <script type="text/python">
-        from browser import document
-
-        # 定义按钮点击事件处理函数
-        def game_button_click(event):
-            document["message"].text = "游戏加载中..."
-            # 这里调用 JavaScript 中的跳转代码
-            window.location.href = "game.html"
-
-        # 绑定按钮点击事件
-        document["game_button"].bind("click", game_button_click)
+    <!-- JavaScript 代码 -->
+    <script type="text/javascript">
+        document.getElementById("game_button").addEventListener("click", function() {
+            document.getElementById("message").innerText = "游戏加载中...";
+            // 这里使用 JavaScript 跳转到 game.html
+            window.location.href = "game.html";
+        });
     </script>
 </body>
 </html>
+
