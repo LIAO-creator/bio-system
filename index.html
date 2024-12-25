@@ -4,11 +4,254 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DNA的秘密</title>
+<link rel="stylesheet" href="style.css">
+<style>
+body { margin: 0; padding: 0; }
+canvas { display: block; background-color: #e6e6ff; }
+/* 这里是页面的额外样式，保持一致性 */
+body {
+font-family: Arial, sans-serif;
+text-align: center;
+padding: 20px;
+background-color: #f4f4f4;
+}
+h1 {
+color: #4CAF50;
+}
+a {
+font-size: 20px;
+color: #007BFF;
+text-decoration: none;
+}
+button {
+font-size: 20px;
+background-color: #FF5722;
+color: white;
+border: none;
+padding: 10px 20px;
+cursor: pointer;
+margin-top: 20px;
+}
+button:hover {
+background-color: #FF7043;
+}
+.game-container {
+display: none; /* 默认不显示游戏 */
+}
+</style>
 </head>
-<body style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
-<h1 style="color: #4CAF50;">点击这里了解DNA的秘密</h1>
+<body>
+<h1>点击这里了解DNA的秘密</h1>
 <p>DNA，作为生命的遗传密码，包含了生物体的重要信息。点击下方链接，探索更多关于DNA的精彩内容！</p>
-   
+    <a href="https://liao-cearetor.github.io/bio-system/dna-page.html">继续探索</a>
+
     <a href="https://liao-creator.github.io/bio-system/dna-page.html" style="font-size: 20px; color: #007BFF; text-decoration: none;">继续探索</a>
+<!-- 核苷酸拼装游戏按钮 -->
+<button id="gameButton">核苷酸拼装游戏</button>
+
+<!-- 游戏界面 -->
+<div class="game-container" id="gameContainer">
+<canvas id="gameCanvas"></canvas>
+</div>
+
+<script>
+// 控制游戏显示/隐藏的逻辑
+const gameButton = document.getElementById("gameButton");
+const gameContainer = document.getElementById("gameContainer");
+
+gameButton.addEventListener("click", () => {
+gameButton.style.display = "none";  // 隐藏按钮
+gameContainer.style.display = "block"; // 显示游戏区域
+initGame();  // 初始化游戏
+});
+
+function initGame() {
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+const WIDTH = 1000, HEIGHT = 700;
+canvas.width = WIDTH;
+canvas.height = HEIGHT;
+const FPS = 30;
+const font = "40px Arial";
+
+const GREEN = "rgb(34, 177, 76)";
+const BLACK = "rgb(0, 0, 0)";
+const WHITE = "rgb(255, 255, 255)";
+
+// 图像加载
+const BASE_A = new Image();
+const BASE_T = new Image();
+const BASE_C = new Image();
+const BASE_G = new Image();
+const BASE_U = new Image();
+
+BASE_A.src = "base_A.png";
+BASE_T.src = "base_T.png";
+BASE_C.src = "base_C.png";
+BASE_G.src = "base_G.png";
+BASE_U.src = "base_U.png";
+
+const NUCLEOTIDES = {
+"A-T": [{ name: "A", img: BASE_A }, { name: "T", img: BASE_T }],
+"C-G": [{ name: "C", img: BASE_C }, { name: "G", img: BASE_G }],
+"A-U": [{ name: "A", img: BASE_A }, { name: "U", img: BASE_U }],
+"G-C": [{ name: "G", img: BASE_G }, { name: "C", img: BASE_C }]
+};
+
+let score = 0;
+let timeLeft = 60;
+let startTime = Date.now();
+let components = [];
+let assemblyRect = { x: WIDTH / 2 - 200, y: HEIGHT - 250, width: 400, height: 150 };
+let draggingComponent = null;
+
+const assemblyText = "拼装区域";
+let targetNucleotide = getNewTarget([]);
+let targetComponents = NUCLEOTIDES[targetNucleotide];
+let assembledComponents = []; // 存储已正确拼装的核苷酸
+let showSuccessMessage = false;
+let successMessageTime = 0;
+let showErrorMessage = false;
+let errorMessageTime = 0;
+let gameOver = false;  // 游戏是否结束
+
+function initComponents() {
+const x = (WIDTH - 5 * 120) / 2;
+components = [
+new DraggableComponent(BASE_A, x, 150, "A"),
+new DraggableComponent(BASE_T, x + 120, 150, "T"),
+new DraggableComponent(BASE_C, x + 240, 150, "C"),
+new DraggableComponent(BASE_G, x + 360, 150, "G"),
+new DraggableComponent(BASE_U, x + 480, 150, "U")
+];
+}
+
+class DraggableComponent {
+constructor(img, x, y, name) {
+this.img = img;
+this.x = x;
+this.y = y;
+this.width = 100;
+this.height = 100;
+this.name = name;
+this.dragging = false;
+this.movable = true;
+this.initX = x;
+this.initY = y;
+}
+
+draw() {
+ctx.drawImage(this.img, this.x, this.y, this.width, this.height);
+}
+
+updatePosition(mouseX, mouseY) {
+if (this.dragging && this.movable) {
+this.x = mouseX - this.width / 2;
+this.y = mouseY - this.height / 2;
+}
+}
+
+startDrag() {
+if (this.movable) this.dragging = true;
+}
+
+stopDrag() {
+this.dragging = false;
+}
+
+resetPosition() {
+this.x = this.initX;
+this.y = this.initY;
+}
+
+lockPosition() {
+this.movable = false;
+}
+
+unlockPosition() {
+this.movable = true;
+}
+
+isInside(x, y) {
+return x >= this.x && x <= this.x + this.width && y >= this.y && y <= this.y + this.height;
+}
+}
+
+function gameLoop() {
+setInterval(() => {
+if (!gameOver) {
+update();
+}
+draw();
+}, 1000 / FPS);
+}
+
+function update() {
+timeLeft = 60 - Math.floor((Date.now() - startTime) / 1000);
+if (timeLeft <= 0) {
+endGame("时间到！游戏结束！");
+}
+}
+
+function draw() {
+ctx.clearRect(0, 0, WIDTH, HEIGHT);
+
+ctx.strokeStyle = GREEN;
+ctx.lineWidth = 2;
+ctx.strokeRect(assemblyRect.x, assemblyRect.y, assemblyRect.width, assemblyRect.height);
+
+ctx.fillStyle = BLACK;
+ctx.font = font;
+ctx.fillText(`目标: ${targetNucleotide}`, WIDTH / 2 - ctx.measureText(`目标: ${targetNucleotide}`).width / 2, 50);
+
+ctx.fillText(`时间: ${timeLeft}秒`, 10, 40);
+ctx.fillText(`分数: ${score}`, WIDTH - 150, 40);
+
+components.forEach(component => component.draw());
+ctx.fillText(assemblyText, WIDTH / 2 - ctx.measureText(assemblyText).width / 2, HEIGHT - 50);
+
+if (showSuccessMessage) {
+ctx.fillText("拼装成功！", WIDTH / 2 - ctx.measureText("拼装成功！").width / 2, HEIGHT / 2 + 120);
+if (Date.now() - successMessageTime > 1000) {
+showSuccessMessage = false;
+resetComponents();
+}
+}
+
+if (showErrorMessage) {
+ctx.fillText("拼装错误！", WIDTH / 2 - ctx.measureText("拼装错误！").width / 2, HEIGHT / 2 + 120);
+if (Date.now() - errorMessageTime > 1000) {
+showErrorMessage = false;
+resetComponents();
+}
+}
+
+if (gameOver) {
+ctx.fillText("游戏结束！", WIDTH / 2 - ctx.measureText("游戏结束！").width / 2, HEIGHT / 2);
+}
+}
+
+function resetComponents() {
+components.forEach(component => {
+if (!component.movable) {
+component.unlockPosition();
+}
+component.resetPosition();
+});
+}
+
+function getNewTarget(excludeTargets) {
+const allTargets = Object.keys(NUCLEOTIDES);
+const availableTargets = allTargets.filter(target => !excludeTargets.includes(target));
+const randomTarget = availableTargets[Math.floor(Math.random() * availableTargets.length)];
+return randomTarget;
+}
+
+// 开始游戏循环
+gameLoop();
+initComponents();
+}
+</script>
 </body>
 </html>
