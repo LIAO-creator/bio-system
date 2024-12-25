@@ -19,62 +19,11 @@
     <button onclick="showGame()">核苷酸拼装游戏</button>
 
     <div id="gameContainer" class="game-container">
-      <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DNA的秘密</title>
-    <link rel="stylesheet" href="style.css">
-    <style>
-        body { margin: 0; padding: 0; }
-        canvas { display: block; background-color: #e6e6ff; }
-        /* 这里是页面的额外样式，保持一致性 */
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }
-        h1 {
-            color: #4CAF50;
-        }
-        a {
-            font-size: 20px;
-            color: #007BFF;
-            text-decoration: none;
-        }
-        button {
-            font-size: 20px;
-            background-color: #FF5722;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            cursor: pointer;
-            margin-top: 20px;
-        }
-        button:hover {
-            background-color: #FF7043;
-        }
-        .game-container {
-            display: none; /* 默认不显示游戏 */
-        }
-    </style>
-</head>
-<body>
-    <h1>点击这里了解DNA的秘密</h1>
-    <p>DNA，作为生命的遗传密码，包含了生物体的重要信息。点击下方链接，探索更多关于DNA的精彩内容！</p>
-    <a href="https://liao-cearetor.github.io/bio-system/dna-page.html">继续探索</a>
-
-    <!-- 核苷酸拼装游戏按钮 -->
-    <button id="gameButton">核苷酸拼装游戏</button>
-
-    <!-- 游戏界面 -->
-    <div class="game-container" id="gameContainer">
+        <!-- 游戏区域代码 -->
         <canvas id="gameCanvas"></canvas>
     </div>
 
-    <script>
+     <script>
         // 控制游戏显示/隐藏的逻辑
         const gameButton = document.getElementById("gameButton");
         const gameContainer = document.getElementById("gameContainer");
@@ -271,21 +220,6 @@
             // 开始游戏循环
             gameLoop();
             initComponents();
-        }
-    </script>
-</body>
-</html>
-
-        <canvas id="gameCanvas"></canvas>
-    </div>
-
-    <script>
-        function showGame() {
-            // 显示游戏区域
-            document.getElementById('gameContainer').style.display = 'block';
-
-            // 如果需要，可以将页面内容隐藏
-            // document.getElementById('content').style.display = 'none';  // 示例
         }
     </script>
 </body>
