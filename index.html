@@ -3,224 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DNA的秘密</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-        .game-container { display: none; }
-        button { font-size: 20px; color: #007BFF; text-decoration: none; margin-top: 20px; }
-        a { font-size: 20px; color: #007BFF; text-decoration: none; margin-top: 20px; display: block; }
-    </style>
+    <title>DNA 介绍</title>
+    <link rel="stylesheet" href="style.css"> <!-- 连接 CSS 文件 -->
 </head>
 <body>
-    <h1 style="color: #4CAF50;">点击这里了解DNA的秘密</h1>
-    <p>DNA，作为生命的遗传密码，包含了生物体的重要信息。点击下方链接，探索更多关于DNA的精彩内容！</p>
-    <a href="https://liao-cearetor.github.io/bio-system/dna-page.html" target="_blank">继续探索</a>
-    
-    <button id="gameButton">核苷酸拼装游戏</button>
+    <div class="container">
+        <h1>DNA 分子的结构</h1>
 
-    <div id="gameContainer" class="game-container">
-        <!-- 游戏区域代码 -->
-        <canvas id="gameCanvas"></canvas>
+        <!-- DNA 图片 -->
+        <div class="image-container">
+            <img src="DNA.jpg" alt="DNA Structure" class="dna-image">
+        </div>
+
+        <!-- DNA 详细信息 -->
+        <div class="info-container">
+            <h2>什么是 DNA？</h2>
+            <p>DNA（脱氧核糖核酸）是一种含有生物遗传信息的分子。它的结构被称为双螺旋，由两条长链构成，每条链由碱基、磷酸和糖组成。DNA 存储了遗传信息，是所有生物体的基因物质基础。</p>
+            
+            <h3>DNA 的重要性</h3>
+            <p>DNA 控制着细胞的功能和特性，决定了生物体的所有遗传特征。它在细胞分裂时被复制，并通过基因表达控制细胞活动。</p>
+            
+            <h3>DNA 的结构</h3>
+            <p>DNA 的基本单元是核苷酸，每个核苷酸由三部分组成：一分子磷酸、一分子脱氧核糖、和一个碱基。DNA 结构中有四种碱基：腺嘌呤（A）、胸腺嘧啶（T）、胞嘧啶（C）和鸟嘌呤（G）。这些碱基按照特定的顺序排列，并通过氢键配对，形成双螺旋结构。</p>
+        </div>
+
+        <!-- 添加继续探索的链接 -->
+        <a href="https://liao-cearetor.github.io/bio-system/dna-page.html" target="_blank" class="explore-link">继续探索</a>
     </div>
 
-    <script>
-        // 控制游戏显示/隐藏的逻辑
-        const gameButton = document.getElementById("gameButton");
-        const gameContainer = document.getElementById("gameContainer");
-
-        gameButton.addEventListener("click", () => {
-            gameButton.style.display = "none";  // 隐藏按钮
-            gameContainer.style.display = "block"; // 显示游戏区域
-            initGame();  // 初始化游戏
-        });
-
-        function initGame() {
-            const canvas = document.getElementById("gameCanvas");
-            const ctx = canvas.getContext("2d");
-
-            const WIDTH = 1000, HEIGHT = 700;
-            canvas.width = WIDTH;
-            canvas.height = HEIGHT;
-            const FPS = 30;
-            const font = "40px Arial";
-
-            const GREEN = "rgb(34, 177, 76)";
-            const BLACK = "rgb(0, 0, 0)";
-            const WHITE = "rgb(255, 255, 255)";
-
-            // 图像加载
-            const BASE_A = new Image();
-            const BASE_T = new Image();
-            const BASE_C = new Image();
-            const BASE_G = new Image();
-            const BASE_U = new Image();
-
-            BASE_A.src = "base_A.png";
-            BASE_T.src = "base_T.png";
-            BASE_C.src = "base_C.png";
-            BASE_G.src = "base_G.png";
-            BASE_U.src = "base_U.png";
-
-            const NUCLEOTIDES = {
-                "A-T": [{ name: "A", img: BASE_A }, { name: "T", img: BASE_T }],
-                "C-G": [{ name: "C", img: BASE_C }, { name: "G", img: BASE_G }],
-                "A-U": [{ name: "A", img: BASE_A }, { name: "U", img: BASE_U }],
-                "G-C": [{ name: "G", img: BASE_G }, { name: "C", img: BASE_C }]
-            };
-
-            let score = 0;
-            let timeLeft = 60;
-            let startTime = Date.now();
-            let components = [];
-            let assemblyRect = { x: WIDTH / 2 - 200, y: HEIGHT - 250, width: 400, height: 150 };
-            let draggingComponent = null;
-
-            const assemblyText = "拼装区域";
-            let targetNucleotide = getNewTarget([]);
-            let targetComponents = NUCLEOTIDES[targetNucleotide];
-            let assembledComponents = []; // 存储已正确拼装的核苷酸
-            let showSuccessMessage = false;
-            let successMessageTime = 0;
-            let showErrorMessage = false;
-            let errorMessageTime = 0;
-            let gameOver = false;  // 游戏是否结束
-
-            function initComponents() {
-                const x = (WIDTH - 5 * 120) / 2;
-                components = [
-                    new DraggableComponent(BASE_A, x, 150, "A"),
-                    new DraggableComponent(BASE_T, x + 120, 150, "T"),
-                    new DraggableComponent(BASE_C, x + 240, 150, "C"),
-                    new DraggableComponent(BASE_G, x + 360, 150, "G"),
-                    new DraggableComponent(BASE_U, x + 480, 150, "U")
-                ];
-            }
-
-            class DraggableComponent {
-                constructor(img, x, y, name) {
-                    this.img = img;
-                    this.x = x;
-                    this.y = y;
-                    this.width = 100;
-                    this.height = 100;
-                    this.name = name;
-                    this.dragging = false;
-                    this.movable = true;
-                    this.initX = x;
-                    this.initY = y;
-                }
-
-                draw() {
-                    ctx.drawImage(this.img, this.x, this.y, this.width, this.height);
-                }
-
-                updatePosition(mouseX, mouseY) {
-                    if (this.dragging && this.movable) {
-                        this.x = mouseX - this.width / 2;
-                        this.y = mouseY - this.height / 2;
-                    }
-                }
-
-                startDrag() {
-                    if (this.movable) this.dragging = true;
-                }
-
-                stopDrag() {
-                    this.dragging = false;
-                }
-
-                resetPosition() {
-                    this.x = this.initX;
-                    this.y = this.initY;
-                }
-
-                lockPosition() {
-                    this.movable = false;
-                }
-
-                unlockPosition() {
-                    this.movable = true;
-                }
-
-                isInside(x, y) {
-                    return x >= this.x && x <= this.x + this.width && y >= this.y && y <= this.y + this.height;
-                }
-            }
-
-            function gameLoop() {
-                setInterval(() => {
-                    if (!gameOver) {
-                        update();
-                    }
-                    draw();
-                }, 1000 / FPS);
-            }
-
-            function update() {
-                timeLeft = 60 - Math.floor((Date.now() - startTime) / 1000);
-                if (timeLeft <= 0) {
-                    endGame("时间到！游戏结束！");
-                }
-            }
-
-            function draw() {
-                ctx.clearRect(0, 0, WIDTH, HEIGHT);
-
-                ctx.strokeStyle = GREEN;
-                ctx.lineWidth = 2;
-                ctx.strokeRect(assemblyRect.x, assemblyRect.y, assemblyRect.width, assemblyRect.height);
-
-                ctx.fillStyle = BLACK;
-                ctx.font = font;
-                ctx.fillText(`目标: ${targetNucleotide}`, WIDTH / 2 - ctx.measureText(`目标: ${targetNucleotide}`).width / 2, 50);
-
-                ctx.fillText(`时间: ${timeLeft}秒`, 10, 40);
-                ctx.fillText(`分数: ${score}`, WIDTH - 150, 40);
-
-                components.forEach(component => component.draw());
-                ctx.fillText(assemblyText, WIDTH / 2 - ctx.measureText(assemblyText).width / 2, HEIGHT - 50);
-
-                if (showSuccessMessage) {
-                    ctx.fillText("拼装成功！", WIDTH / 2 - ctx.measureText("拼装成功！").width / 2, HEIGHT / 2 + 120);
-                    if (Date.now() - successMessageTime > 1000) {
-                        showSuccessMessage = false;
-                        resetComponents();
-                    }
-                }
-
-                if (showErrorMessage) {
-                    ctx.fillText("拼装错误！", WIDTH / 2 - ctx.measureText("拼装错误！").width / 2, HEIGHT / 2 + 120);
-                    if (Date.now() - errorMessageTime > 1000) {
-                        showErrorMessage = false;
-                        resetComponents();
-                    }
-                }
-
-                if (gameOver) {
-                    ctx.fillText("游戏结束！", WIDTH / 2 - ctx.measureText("游戏结束！").width / 2, HEIGHT / 2);
-                }
-            }
-
-            function resetComponents() {
-                components.forEach(component => {
-                    if (!component.movable) {
-                        component.unlockPosition();
-                    }
-                    component.resetPosition();
-                });
-            }
-
-            function getNewTarget(excludeTargets) {
-                const allTargets = Object.keys(NUCLEOTIDES);
-                const availableTargets = allTargets.filter(target => !excludeTargets.includes(target));
-                const randomTarget = availableTargets[Math.floor(Math.random() * availableTargets.length)];
-                return randomTarget;
-            }
-
-            // 开始游戏循环
-            gameLoop();
-            initComponents();
-        }
-    </script>
+    <script src="script.js"></script> <!-- 连接 JavaScript 文件 -->
 </body>
 </html>
